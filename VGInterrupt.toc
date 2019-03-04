@@ -1,0 +1,7 @@
+## Title: VanguardInterrupt
+## Author: Erminn <Vanguard>, Kronos, Twinstar
+## Version: 1.0
+## SavedVariables: VGI_EnemyCastBar_position
+VGInterrupt.lua
+VGInterrupt.xml
+InterruptableSpells.lua

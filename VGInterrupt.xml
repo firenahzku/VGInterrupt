@@ -1,0 +1,25 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	
+	<Frame name="VGI_MainFrame">	
+		<Scripts>
+			<OnLoad>
+				VGI_OnLoad();
+			</OnLoad>
+			<OnEvent>
+				VGI_OnEvent( event );
+			</OnEvent>
+			<OnUpdate>
+				VGI_OnUpdate();
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+	
+	<GameTooltip name="VGI_Tooltip" hidden="true" inherits="GameTooltipTemplate">
+		<Scripts>
+			<Onload>
+				this:SetOwner(this, "ANCHOR_NONE");
+			</Onload>
+		</Scripts>
+	</GameTooltip>
+</Ui>
