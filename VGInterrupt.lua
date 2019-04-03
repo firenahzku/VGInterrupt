@@ -260,7 +260,7 @@ function VGI_OnEvent()
 				elseif ( string.find( arg1, VGI_PATTERN_COUNTERSPELL_SUCCESS ) ) then
 						-- Counterspell was successful.
 						if ( GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0 ) then handleSpellEnd( targetRaidIconIndex, targetName );
-						else SendAddonMessage( "VGI_Interrupted", targetRaidIconIndex.."!"..targetName, "RAID" ); end
+						else SendAddonMessage( "VGI_Interrupted", targetrgetRaidIconIndex.."!"..targetName, "RAID" ); end
 						-- SendChatMessage( "Counterspell worked.", "SAY" );
 				elseif ( string.find( arg1, VGI_PATTERN_EARTHSHOCK ) ) then
 					if ( string.find( arg1, VGI_PATTERN_EARTHSHOCK_SUCCESS ) ) then
@@ -454,7 +454,7 @@ function handleSpellCast( targetRaidIconIndex, targetName, spellName )
 end
 
 function handleSpellEnd( targetRaidIconIndex, targetName )
-	if ( VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex and VGI_EnemyCastBar.caster == targetName ) then
+	if ( VGI_EnemyCastBar.caster == targetName and ( ( VGI_EnemyCastBar.targetIconIndex ~= 0 and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) or VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] == 0 ) ) then
 		VGI_EnemyCastBar.inProgress = false;
 		VGI_EnemyCastBar.targetIconIndex = nil;
 		VGI_EnemyCastBar.caster = nil;
