@@ -69,6 +69,8 @@ VGI_PATTERN_PUMMEL_SUCCESS = "Your Pummel [hcr]+its";
 VGI_PATTERN_KICK = "(.*)Kick(.*)";
 VGI_PATTERN_KICK_SUCCESS = "Your Kick [hcr]+its";
 VGI_PATTERN_COUNTERSPELL_SUCCESS = "You interrupt";
+VGI_PATTERN_EARTHSHOCK = "(.*)Earth Shock(.*)";
+VGI_PATTERN_EARTHSHOCK_SUCCESS = "Your Earth Shock [hcr]+its";
 
 VGI_PATTERN_INCOMING_MELEE_HIT = "(.*) [hcr]+its you for (.*)";
 VGI_PATTERN_INCOMING_MELEE_MISS = "(.*) misses you.";
@@ -260,6 +262,16 @@ function VGI_OnEvent()
 						if ( GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0 ) then handleSpellEnd( targetRaidIconIndex, targetName );
 						else SendAddonMessage( "VGI_Interrupted", targetRaidIconIndex.."!"..targetName, "RAID" ); end
 						-- SendChatMessage( "Counterspell worked.", "SAY" );
+				elseif ( string.find( arg1, VGI_PATTERN_EARTHSHOCK ) ) then
+					if ( string.find( arg1, VGI_PATTERN_EARTHSHOCK_SUCCESS ) ) then
+						-- Shield Bash was successful.
+						if ( GetNumRaidMembers() == 0 and GetNumPartyMembers() == 0 ) then handleSpellEnd( targetRaidIconIndex, targetName );
+						else SendAddonMessage( "VGI_Interrupted", targetRaidIconIndex.."!"..targetName, "RAID" ); end
+						-- SendChatMessage( "Earth Shock worked.", "SAY" );
+					else 
+						-- Shield Bash failed.
+						SendChatMessage( "Earth Shock FAILED! Someone else interrupt!", "SAY" );
+					end
 				end
 			end
 		end
