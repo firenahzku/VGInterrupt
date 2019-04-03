@@ -313,7 +313,8 @@ function VGI_OnEvent()
 		for mobName, spellName in string.gfind( arg1, "(.+) begins to cast (.+)." ) do
 			if ( VGI_Spells[ mobName ] ~= nil and VGI_Spells[ mobName ][ spellName ] ~= nil ) then
 				VGI_castAdd( mobName, spellName );
-				if ( mobName == "Giant Eye Tentacle" ) then
+				-- The following mobs spawn and start casting spells immediately, so we can't wait for them to be targets before catching their casts
+				if ( mobName == "Giant Eye Tentacle" or mobName == "Eye Tentacle" or mobName == "The Prophet Skeram" ) then
 					handleSpellCast( 0, mobName, spellName );
 				elseif UnitExists( "target" ) then
 					-- It may be your target casting the spell.
