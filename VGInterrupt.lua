@@ -454,7 +454,7 @@ function handleSpellCast( targetRaidIconIndex, targetName, spellName )
 end
 
 function handleSpellEnd( targetRaidIconIndex, targetName )
-	if ( VGI_EnemyCastBar.caster == targetName and ( ( VGI_EnemyCastBar.targetIconIndex ~= 0 and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) or VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] == 0 ) ) then
+	if ( VGI_EnemyCastBar.caster == targetName and ( ( VGI_EnemyCastBar.targetIconIndex ~= 0 and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) or (VGI_MobsCasting ~= nil and VGI_MobsCasting[VGI_EnemyCastBar.caster] ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] == 0 ) ) ) then
 		VGI_EnemyCastBar.inProgress = false;
 		VGI_EnemyCastBar.targetIconIndex = nil;
 		VGI_EnemyCastBar.caster = nil;
