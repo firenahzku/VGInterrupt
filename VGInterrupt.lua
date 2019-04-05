@@ -103,17 +103,19 @@ function VGI_OnLoad()
 end
 
 function VGI_castAdd( mobName, spellName )
+	-- Print(mobName.." casting "..spellName.." at "..GetTime())
 	if ( VGI_MobsCasting[ mobName ] == nil ) then VGI_MobsCasting[ mobName ] = {} end
-	if ( VGI_MobsCasting[ mobName ][ spellName ] == nil ) then VGI_MobsCasting[ mobName ][ spellName ] = 0 end
-	VGI_MobsCasting[ mobName ][ spellName ] = VGI_MobsCasting[ mobName ][ spellName ] + 1;
+	if ( VGI_MobsCasting[ mobName ][ spellName ] == nil ) then VGI_MobsCasting[ mobName ][ spellName ] = { count = 0, timestamps = {} } end
+	VGI_MobsCasting[ mobName ][ spellName ].count = VGI_MobsCasting[ mobName ][ spellName ].count + 1;
+	table.insert(VGI_MobsCasting[ mobName ][ spellName ].timestamps, GetTime());
 	-- Print( mobName.." is casting "..spellName )
 end
 
 function VGI_castSubtract( mobName )
 	if ( VGI_MobsCasting[ mobName ] == nil ) then return end
-	for spellName, casterCount in VGI_MobsCasting[ mobName ] do
-		if ( casterCount > 0 ) then
-			VGI_MobsCasting[ mobName ][ spellName ] = VGI_MobsCasting[ mobName ][ spellName ] - 1;
+	for spellName, val in VGI_MobsCasting[ mobName ] do
+		if ( val.count > 0 ) then
+			VGI_MobsCasting[ mobName ][ spellName ].count = VGI_MobsCasting[ mobName ][ spellName ].count - 1;
 		end
 	end
 end
@@ -153,13 +155,15 @@ function VGI_InterruptIfValid()
 		local targetRaidIconIndex = GetRaidTargetIndex( "target" ) or "0";
 		local targetName = UnitName( "target" ) or "";
 		if ( not UnitIsPlayer( "target" ) and VGI_Spells[ targetName ] ~= nil )  then
-			if ( VGI_EnemyCastBar.inProgress and VGI_EnemyCastBar.caster == targetName and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) then
+			if ( VGI_EnemyCastBar.inProgress and VGI_EnemyCastBar.caster == targetName and ( VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex or VGI_EnemyCastBar.targetIconIndex == "0" ) ) then
 				-- If it is a channeled spell, interrupt immediately
 				if ( VGI_Spells[ targetName ][ VGI_EnemyCastBar.spellName ].isChanneled == true ) then
 					VGI_Interrupt();
 				else -- else, delay it
 					local alpha = VGI_EnemyCastBar.frame:GetAlpha();
-					if ( alpha == 1 ) then VGI_Interrupt(); end
+					-- unless there are multiple casts happening
+					-- Print(VGI_MobsCasting[ targetName ][ VGI_EnemyCastBar.spellName ].count)
+					if ( VGI_MobsCasting[ targetName ][ VGI_EnemyCastBar.spellName ].count > 1 or alpha == 1 ) then VGI_Interrupt(); end
 				end
 			end
 		else
@@ -327,7 +331,7 @@ function VGI_OnEvent()
 				VGI_castAdd( mobName, spellName );
 				-- The following mobs spawn and start casting spells immediately, so we can't wait for them to be targets before catching their casts
 				if ( mobName == "Giant Eye Tentacle" or mobName == "Eye Tentacle" or mobName == "The Prophet Skeram" ) then
-					handleSpellCast( 0, mobName, spellName );
+					handleSpellCast( "0", mobName, spellName );
 				elseif UnitExists( "target" ) then
 					-- It may be your target casting the spell.
 					local targetRaidIconIndex = GetRaidTargetIndex( "target" ) or "0";
@@ -347,7 +351,7 @@ function VGI_OnEvent()
 			handleSpellEnd( mobRaidIconIndex, mobName );
 			-- Print(1337)
 		end
-		if ( VGI_EnemyCastBar.caster ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] == 0 ) then
+		if ( VGI_EnemyCastBar.caster ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ].count == 0 ) then
 			-- Your target was not casting at all.
 			handleSpellEnd( VGI_EnemyCastBar.targetIconIndex, VGI_EnemyCastBar.caster );
 		end
@@ -454,7 +458,7 @@ function handleSpellCast( targetRaidIconIndex, targetName, spellName )
 end
 
 function handleSpellEnd( targetRaidIconIndex, targetName )
-	if ( VGI_EnemyCastBar.caster == targetName and ( ( VGI_EnemyCastBar.targetIconIndex ~= 0 and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) or (VGI_MobsCasting ~= nil and VGI_MobsCasting[VGI_EnemyCastBar.caster] ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] == 0 ) ) ) then
+	if ( VGI_EnemyCastBar.caster == targetName and ( ( VGI_EnemyCastBar.targetIconIndex ~= 0 and VGI_EnemyCastBar.targetIconIndex == targetRaidIconIndex ) or (VGI_MobsCasting ~= nil and VGI_MobsCasting[VGI_EnemyCastBar.caster] ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ] ~= nil and VGI_MobsCasting[ VGI_EnemyCastBar.caster ][ VGI_EnemyCastBar.spellName ].count == 0 ) ) ) then
 		VGI_EnemyCastBar.inProgress = false;
 		VGI_EnemyCastBar.targetIconIndex = nil;
 		VGI_EnemyCastBar.caster = nil;
@@ -465,6 +469,24 @@ function handleSpellEnd( targetRaidIconIndex, targetName )
 end
 
 function VGI_OnUpdate()
+	-- if (VGI_lastUpdate == nil) then VGI_lastUpdate = GetTime() end
+	-- if (GetTime() - VGI_lastUpdate > 0.1) then
+		-- Clean-up ended casts
+		for mobName in VGI_MobsCasting do
+			for spellName in VGI_MobsCasting[ mobName ] do
+				-- for key, val
+				for key, stamp in VGI_MobsCasting[ mobName ][ spellName ].timestamps do
+					-- Print(GetTime() - stamp.. " | "..VGI_Spells[mobName][spellName].duration.." | "..GetTime())
+					if (GetTime() >= stamp + VGI_Spells[mobName][spellName].duration) then
+						table.remove(VGI_MobsCasting[ mobName ][ spellName ].timestamps, key);
+						VGI_castSubtract(mobName);
+					end
+				end
+			end
+		end
+	-- 	VGI_lastUpdate = GetTime()
+	-- end
+
 	if ( VGI_EnemyCastBar.inProgress ) then
 		local currentProgress = GetTime();
 		if ( currentProgress > VGI_EnemyCastBar.castEnd ) then
